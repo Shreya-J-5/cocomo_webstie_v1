@@ -16,7 +16,7 @@ export default function ReelScene3D() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0.4, 6.2);
+    camera.position.set(0, 0.6, 6.2);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
@@ -24,7 +24,7 @@ export default function ReelScene3D() {
     mount.appendChild(renderer.domElement);
 
     // Lighting — soft studio + brand accent rims
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
     const key = new THREE.DirectionalLight(0xffffff, 1.1);
     key.position.set(3, 5, 4);
     scene.add(key);
@@ -43,73 +43,70 @@ export default function ReelScene3D() {
     const dark = new THREE.MeshStandardMaterial({ color: 0x2b2b35, roughness: 0.7 });
 
     // Head + hair
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 32, 32), skin);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), skin);
     head.position.y = 1.5;
     human.add(head);
     const hair = new THREE.Mesh(
-      new THREE.SphereGeometry(0.6, 32, 32, 0, Math.PI * 2, 0, Math.PI / 1.7),
+      new THREE.SphereGeometry(0.55, 32, 32, 0, Math.PI * 2, 0, Math.PI / 1.7),
       dark
     );
-    hair.position.y = 1.62;
+    hair.position.y = 1.6;
     human.add(hair);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.25, 16), skin);
+    neck.position.y = 1.12;
+    human.add(neck);
 
     // Torso
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.6, 1.1, 8, 24), shirt);
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.0, 8, 24), shirt);
     torso.position.y = 0.2;
     human.add(torso);
 
-    // Arms reaching forward to hold phones
-    const armGeo = new THREE.CapsuleGeometry(0.18, 1.0, 8, 16);
-    const mkArm = (sx: number) => {
-      const arm = new THREE.Mesh(armGeo, shirt);
-      arm.position.set(sx * 0.75, 0.4, 0.5);
-      arm.rotation.z = sx * -Math.PI / 3.2;
-      arm.rotation.x = -0.3;
-      human.add(arm);
-    };
-    mkArm(-1);
-    mkArm(1);
+    // Relaxed (viewer-right) arm down the side
+    const relaxedArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.9, 8, 16), shirt);
+    relaxedArm.position.set(0.78, 0.05, 0.3);
+    relaxedArm.rotation.z = 0.3;
+    human.add(relaxedArm);
+    const relaxedHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), skin);
+    relaxedHand.position.set(0.95, -0.42, 0.45);
+    human.add(relaxedHand);
 
-    // Hands
-    const handGeo = new THREE.SphereGeometry(0.2, 16, 16);
-    const hands: THREE.Mesh[] = [];
-    [-1, 1].forEach((sx) => {
-      const hand = new THREE.Mesh(handGeo, skin);
-      hand.position.set(sx * 1.05, -0.15, 0.95);
-      human.add(hand);
-      hands.push(hand);
-    });
+    // Raised (viewer-left) arm holding the phone up for a selfie
+    const raisedArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.8, 8, 16), shirt);
+    raisedArm.position.set(-0.4, 1.0, 0.55);
+    raisedArm.rotation.z = -0.3;
+    raisedArm.rotation.x = -0.3;
+    human.add(raisedArm);
+    const selfieHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), skin);
+    selfieHand.position.set(-0.3, 1.5, 0.78);
+    human.add(selfieHand);
 
-    // Two phones (influencer multi-phone reel setup) with glowing screens
+    // Phone (screen facing the camera = the selfie preview)
     const phoneMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.4, metalness: 0.3 });
-    const screens: THREE.Mesh[] = [];
-    const mkPhone = (hand: THREE.Mesh, sx: number) => {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.06), phoneMat);
-      const screen = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.38, 0.8),
-        new THREE.MeshStandardMaterial({ color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 1.4, roughness: 0.2 })
-      );
-      screen.position.z = 0.04;
-      g.add(body, screen);
-      g.position.copy(hand.position);
-      g.position.z += 0.18;
-      g.rotation.y = sx * -0.3;
-      human.add(g);
-      screens.push(screen);
-    };
-    mkPhone(hands[0], -1);
-    mkPhone(hands[1], 1);
+    const phoneScreen = new THREE.MeshStandardMaterial({
+      color: 0x8b5cf6,
+      emissive: 0x8b5cf6,
+      emissiveIntensity: 1.4,
+      roughness: 0.2,
+    });
+    const phone = new THREE.Group();
+    const phoneBody = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.82, 0.06), phoneMat);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.72), phoneScreen);
+    screen.position.z = 0.04;
+    phone.add(phoneBody, screen);
+    phone.position.set(-0.22, 1.52, 1.0);
+    phone.rotation.y = 0.15;
+    phone.rotation.z = -0.08;
+    human.add(phone);
 
-    // Blinking REC dot near the right phone
-    const rec = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xff3b3b })
+    // Blinking shutter / flash near the phone
+    const flash = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
     );
-    rec.position.set(1.45, 0.55, 1.15);
-    human.add(rec);
+    flash.position.set(-0.22, 1.96, 1.0);
+    human.add(flash);
 
-    // Floating engagement particles
+    // Floating likes / engagement particles
     const particleCount = 50;
     const pGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
@@ -141,12 +138,12 @@ export default function ReelScene3D() {
       human.rotation.x += (-target.y - human.rotation.x) * 0.05;
       human.position.y = Math.sin(t * 1.2) * 0.05;
 
-      screens.forEach((s, i) => {
-        (s.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + Math.sin(t * 3 + i) * 0.5;
-      });
+      phoneScreen.emissiveIntensity = 1.2 + Math.sin(t * 3) * 0.5;
 
-      rec.visible = Math.sin(t * 4) > -0.2;
-      rec.scale.setScalar(0.8 + Math.sin(t * 8) * 0.2);
+      // shutter flash every ~2.2s
+      const blink = Math.sin(t * 2.8);
+      flash.visible = blink > 0.6;
+      flash.scale.setScalar(0.7 + blink * 0.4);
 
       particles.rotation.y = t * 0.05;
       const pos = pGeo.attributes.position as THREE.BufferAttribute;
@@ -194,13 +191,13 @@ export default function ReelScene3D() {
       <div ref={mountRef} className="h-[340px] w-full md:h-[420px]" style={{ touchAction: "pan-y" }} />
 
       <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 backdrop-blur-md">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-        <span className="text-xs font-bold tracking-widest text-white">REC</span>
+        <span className="h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
+        <span className="text-xs font-bold tracking-widest text-white">SELFIE</span>
       </div>
 
       <div className="pointer-events-none absolute bottom-4 right-4 rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-right backdrop-blur-md">
-        <p className="text-[10px] uppercase tracking-widest text-secondary">Shooting a reel</p>
-        <p className="text-sm font-semibold text-primary">multi-phone setup</p>
+        <p className="text-[10px] uppercase tracking-widest text-secondary">Taking a selfie</p>
+        <p className="text-sm font-semibold text-primary">one phone, real moment</p>
       </div>
     </div>
   );
